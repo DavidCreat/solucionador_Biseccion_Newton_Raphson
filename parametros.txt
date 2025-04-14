@@ -1,0 +1,8 @@
+# Archivo de parámetros para el solucionador de ecuaciones
+equation=x^2 - 4
+method=both
+a=-5
+b=0
+x0=-1
+tolerance=1e-8
+max_iterations=50
