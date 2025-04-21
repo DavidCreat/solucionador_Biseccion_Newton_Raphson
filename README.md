@@ -35,33 +35,58 @@ Una implementación elegante y eficiente de métodos numéricos para encontrar r
 
 ## 📝 Descripción
 
-Este programa implementa dos métodos numéricos fundamentales para encontrar raíces de ecuaciones no lineales:
+Este proyecto resuelve ecuaciones no lineales utilizando dos métodos numéricos: **Bisección** y **Newton-Raphson**. Permite comparar la eficiencia y precisión de ambos métodos, mostrando resultados detallados, tablas y gráficas. El programa puede ejecutarse en modo interactivo o mediante argumentos de línea de comandos.
 
-1. **Método de Bisección**: Un método robusto que garantiza convergencia para funciones continuas.
-2. **Método de Newton-Raphson**: Un método de convergencia cuadrática que utiliza la derivada de la función.
+### Métodos implementados
+- **Bisección:** Método de intervalo confiable para encontrar raíces cuando se conoce un cambio de signo.
+- **Newton-Raphson:** Método rápido basado en derivadas, ideal si se dispone de una buena aproximación inicial.
 
-El programa está diseñado con una interfaz intuitiva y proporciona análisis detallados de rendimiento y precisión para ambos métodos.
+### Uso
 
----
+#### Ejecución interactiva
+Al ejecutar el programa sin argumentos, se activa un modo interactivo donde puedes ingresar la ecuación, los parámetros y el intervalo o valor inicial.
 
-## ✨ Características
+#### Ejecución por línea de comandos
+Puedes resolver una ecuación directamente usando argumentos. Ejemplo:
 
-- 🖥️ **Interfaz de consola intuitiva** con instrucciones paso a paso
-- 📊 **Visualización detallada** de resultados con tablas de iteraciones
-- 📈 **Comparación automática** entre métodos (velocidad, precisión, iteraciones)
-- 🧠 **Cálculo automático** de derivadas numéricas
-- 🛡️ **Validación robusta** de entradas y manejo de errores
-- 🔄 **Múltiples modos** de ejecución (interactivo, línea de comandos, archivo)
-- 📋 **Soporte para ecuaciones complejas** con funciones matemáticas estándar
+```bash
+python solucionador_ecuaciones.py --ecuacion "x^3 - x - 2" --metodo newton --x0 1.5 --tol 1e-6
+```
 
----
+Parámetros principales:
+- `--ecuacion`: Ecuación en formato texto (usa x como variable).
+- `--metodo`: `biseccion` o `newton`.
+- `--a`, `--b`: Intervalo para bisección.
+- `--x0`: Valor inicial para Newton-Raphson.
+- `--tol`: Tolerancia (opcional).
+- `--max_iter`: Iteraciones máximas (opcional).
 
-## 🔍 Métodos Implementados
+### Ejemplo de resultados
 
-| Método | Características | Ventajas | Desventajas |
-|--------|----------------|----------|-------------|
-| **Bisección** | Requiere intervalo [a,b] donde f(a)·f(b) < 0 | <ul><li>Convergencia garantizada</li><li>Robusto</li><li>Simple de implementar</li></ul> | <ul><li>Convergencia lenta (lineal)</li><li>Requiere un intervalo inicial</li></ul> |
-| **Newton-Raphson** | Requiere un valor inicial x₀ | <ul><li>Convergencia rápida (cuadrática)</li><li>Precisión alta</li></ul> | <ul><li>Puede diverger</li><li>Requiere que la función sea diferenciable</li><li>Problemas si f'(x) ≈ 0</li></ul> |
+```
+Método de Bisección:
+• Raíz encontrada: 3.1415920258
+• Iteraciones: 19
+• Error absoluto final: 1.9e-06
+
+Método de Newton-Raphson:
+• Raíz encontrada: 3.1415926536
+• Iteraciones: 3
+• Error absoluto final: 1.3e-15
+```
+
+Se genera también una tabla con los valores intermedios, errores y, si se desea, gráficas comparativas entre ambos métodos.
+
+### Recomendaciones
+- Usa bisección si necesitas seguridad en la convergencia y conoces un intervalo donde la función cambia de signo.
+- Usa Newton-Raphson si tienes una buena aproximación inicial y buscas rapidez.
+
+### Requisitos
+- Python 3.x
+- matplotlib
+
+### Autor
+David Alexander Fonseca Perez
 
 ---
 
@@ -262,6 +287,6 @@ Este proyecto está licenciado bajo la Licencia MIT - consulta el archivo [LICEN
 ---
 
 <div align="center">
-<p>Desarrollado con ❤️ para el curso de Cálculo Numérico</p>
-<p>© 2025</p>
+<p>Para calculo #5</p>
+<p>👨‍💻 David Alexander Fonseca Perez</p>
 </div>

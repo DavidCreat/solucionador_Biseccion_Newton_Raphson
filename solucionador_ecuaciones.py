@@ -1,5 +1,7 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+#DAVID ALEXANDER FONSECA PEREZ
+#Programa para resolver ecuaciones no lineales utilizando los metodos de:
+#1. Biseccion
+#2. Newton-Raphson
 
 """
 Programa para resolver ecuaciones no lineales utilizando los metodos de:
@@ -9,8 +11,8 @@ Programa para resolver ecuaciones no lineales utilizando los metodos de:
 Este programa permite encontrar raices de ecuaciones no lineales y comparar
 la eficiencia y precision de ambos metodos.
 
-Author: [Your name]
-Date: [Creation date]
+Author: [David Alexander Fonseca Perez]
+Date: [2025-04-18]
 Version: 1.0
 """
 
@@ -19,6 +21,8 @@ import re
 import sys
 import argparse
 import time
+import tracemalloc
+import matplotlib.pyplot as plt
 from typing import Callable, List, Tuple, Dict, Optional, Any, Union
 
 def analizar_ecuacion(ecuacion_str: str) -> Callable[[float], float]:
@@ -33,6 +37,9 @@ def analizar_ecuacion(ecuacion_str: str) -> Callable[[float], float]:
     """
     # Reemplazar operaciones matematicas comunes con sus equivalentes en Python
     ecuacion_str = ecuacion_str.replace("^", "**")
+    
+    # Insertar operadores de multiplicación donde sea necesario (ej: 4x -> 4*x)
+    ecuacion_str = re.sub(r'(\d)([a-zA-Z])', r'\1*\2', ecuacion_str)
     
     # Reemplazar funciones matematicas comunes
     ecuacion_str = re.sub(r'sin\(', 'math.sin(', ecuacion_str)
@@ -93,7 +100,7 @@ def calcular_error(actual: float, anterior: float) -> Tuple[float, float]:
 
 
 def metodo_biseccion(f: Callable[[float], float], a: float, b: float, 
-                    tol: float = 1e-6, max_iter: int = 100) -> Tuple[float, int, List[float], List[float], List[float], float]:
+                    tol: float = 1e-6, max_iter: int = 100) -> Tuple[float, int, List[float], List[float], List[float], float, float]:
     """
     Implementa el metodo de biseccion para encontrar una raiz de f en [a, b].
     
@@ -107,14 +114,15 @@ def metodo_biseccion(f: Callable[[float], float], a: float, b: float,
     Returns:
         Una tupla con la raiz aproximada, el numero de iteraciones realizadas,
         una lista con los valores intermedios, una lista con los errores absolutos,
-        una lista con los errores relativos y el tiempo de ejecucion.
+        una lista con los errores relativos, el tiempo de ejecucion y el uso de memoria en bytes.
     """
     # Verificar que f(a) y f(b) tengan signos opuestos
     if f(a) * f(b) >= 0:
         print(f"Error: f(a) = {f(a)} y f(b) = {f(b)} deben tener signos opuestos.")
-        return None, 0, [], [], [], 0
+        return None, 0, [], [], [], 0, 0
     
     # Inicializacion
+    tracemalloc.start()
     tiempo_inicio = time.time()
     contador_iter = 0
     valores_c = [a]  # Incluir el valor inicial
@@ -145,7 +153,9 @@ def metodo_biseccion(f: Callable[[float], float], a: float, b: float,
         # Verificar si c es una raiz
         if abs(fc) < tol:
             tiempo_fin = time.time()
-            return c, contador_iter + 1, valores_c, errores_abs, errores_rel, tiempo_fin - tiempo_inicio
+            memoria_actual, memoria_pico = tracemalloc.get_traced_memory()
+            tracemalloc.stop()
+            return c, contador_iter + 1, valores_c, errores_abs, errores_rel, tiempo_fin - tiempo_inicio, memoria_pico
         
         # Actualizar el intervalo
         if f(a) * fc < 0:
@@ -163,11 +173,13 @@ def metodo_biseccion(f: Callable[[float], float], a: float, b: float,
     errores_rel.append(error_rel)
     
     tiempo_fin = time.time()
-    return c, contador_iter + 1, valores_c, errores_abs, errores_rel, tiempo_fin - tiempo_inicio
+    memoria_actual, memoria_pico = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    return c, contador_iter + 1, valores_c, errores_abs, errores_rel, tiempo_fin - tiempo_inicio, memoria_pico
 
 
 def metodo_newton_raphson(f: Callable[[float], float], x0: float, 
-                         tol: float = 1e-6, max_iter: int = 100) -> Tuple[float, int, List[float], List[float], List[float], float]:
+                         tol: float = 1e-6, max_iter: int = 100) -> Tuple[float, int, List[float], List[float], List[float], float, float]:
     """
     Implementa el metodo de Newton-Raphson para encontrar una raiz de f.
     
@@ -180,9 +192,10 @@ def metodo_newton_raphson(f: Callable[[float], float], x0: float,
     Returns:
         Una tupla con la raiz aproximada, el numero de iteraciones realizadas,
         una lista con los valores intermedios, una lista con los errores absolutos,
-        una lista con los errores relativos y el tiempo de ejecucion.
+        una lista con los errores relativos, el tiempo de ejecucion y el uso de memoria en bytes.
     """
     # Inicializacion
+    tracemalloc.start()
     tiempo_inicio = time.time()
     x = x0
     contador_iter = 0
@@ -198,7 +211,9 @@ def metodo_newton_raphson(f: Callable[[float], float], x0: float,
         if abs(df) < 1e-10:
             print("Error: La derivada es cercana a cero. El metodo puede no converger.")
             tiempo_fin = time.time()
-            return x, contador_iter, valores_x, errores_abs, errores_rel, tiempo_fin - tiempo_inicio
+            memoria_actual, memoria_pico = tracemalloc.get_traced_memory()
+            tracemalloc.stop()
+            return x, contador_iter, valores_x, errores_abs, errores_rel, tiempo_fin - tiempo_inicio, memoria_pico
         
         # Calcular la nueva aproximacion
         x_nuevo = x - f(x) / df
@@ -212,7 +227,9 @@ def metodo_newton_raphson(f: Callable[[float], float], x0: float,
         # Verificar el criterio de parada
         if abs(x_nuevo - x) < tol:
             tiempo_fin = time.time()
-            return x_nuevo, contador_iter + 1, valores_x, errores_abs, errores_rel, tiempo_fin - tiempo_inicio
+            memoria_actual, memoria_pico = tracemalloc.get_traced_memory()
+            tracemalloc.stop()
+            return x_nuevo, contador_iter + 1, valores_x, errores_abs, errores_rel, tiempo_fin - tiempo_inicio, memoria_pico
         
         # Actualizar x
         x = x_nuevo
@@ -220,7 +237,9 @@ def metodo_newton_raphson(f: Callable[[float], float], x0: float,
     
     print("Advertencia: Se alcanzo el numero maximo de iteraciones.")
     tiempo_fin = time.time()
-    return x, contador_iter, valores_x, errores_abs, errores_rel, tiempo_fin - tiempo_inicio
+    memoria_actual, memoria_pico = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    return x, contador_iter, valores_x, errores_abs, errores_rel, tiempo_fin - tiempo_inicio, memoria_pico
 
 
 def imprimir_tabla(nombre_metodo: str, valores: List[float], errores_abs: List[float], 
@@ -287,6 +306,9 @@ def comparar_metodos(resultados_biseccion, resultados_newton, ecuacion_str: str)
     # Tiempo de ejecucion
     print(f"{'Tiempo (s)':^20} | {resultados_biseccion[5]:^25.6f} | {resultados_newton[5]:^25.6f}")
     
+    # Uso de memoria
+    print(f"{'Uso de memoria (bytes)':^20} | {resultados_biseccion[6]:^25d} | {resultados_newton[6]:^25d}")
+    
     # Conclusiones
     print("\nConclusiones:")
     
@@ -314,6 +336,14 @@ def comparar_metodos(resultados_biseccion, resultados_newton, ecuacion_str: str)
     else:
         print("- Ambos metodos tuvieron errores absolutos finales similares.")
     
+    # Método con menor uso de memoria
+    if resultados_biseccion[6] < resultados_newton[6]:
+        print("- El metodo de Biseccion utilizó menos memoria.")
+    elif resultados_newton[6] < resultados_biseccion[6]:
+        print("- El metodo de Newton-Raphson utilizó menos memoria.")
+    else:
+        print("- Ambos metodos utilizaron cantidades similares de memoria.")
+    
     # Observaciones adicionales
     print("\nObservaciones adicionales:")
     if resultados_newton[1] < resultados_biseccion[1] and resultados_newton[5] < resultados_biseccion[5]:
@@ -331,6 +361,100 @@ def comparar_metodos(resultados_biseccion, resultados_newton, ecuacion_str: str)
         print("- Para esta ecuacion especifica, el metodo de Biseccion es preferible.")
     else:
         print("- Ambos metodos son adecuados para esta ecuacion, pero con diferentes caracteristicas de convergencia.")
+    
+    # Crear visualizaciones gráficas
+    crear_graficas_comparativas(resultados_biseccion, resultados_newton, ecuacion_str)
+
+
+def crear_graficas_comparativas(resultados_biseccion, resultados_newton, ecuacion_str: str) -> None:
+    """
+    Crea gráficas comparativas entre los métodos de bisección y Newton-Raphson.
+    
+    Args:
+        resultados_biseccion: Resultados del método de bisección.
+        resultados_newton: Resultados del método de Newton-Raphson.
+        ecuacion_str: Ecuación resuelta.
+    """
+    # Configurar el estilo de las gráficas
+    plt.style.use('seaborn-v0_8-darkgrid')
+    
+    # Crear figura con subplots
+    fig, axs = plt.subplots(2, 2, figsize=(14, 10))
+    fig.suptitle(f'Comparación de Métodos para la ecuación: {ecuacion_str}', fontsize=16)
+    
+    # 1. Gráfica de convergencia (valores vs iteraciones)
+    axs[0, 0].plot(range(len(resultados_biseccion[2])), resultados_biseccion[2], 'b.-', label='Bisección')
+    axs[0, 0].plot(range(len(resultados_newton[2])), resultados_newton[2], 'r.-', label='Newton-Raphson')
+    axs[0, 0].set_title('Convergencia de los métodos')
+    axs[0, 0].set_xlabel('Iteración')
+    axs[0, 0].set_ylabel('Valor de x')
+    axs[0, 0].legend()
+    axs[0, 0].grid(True)
+    
+    # 2. Gráfica de error absoluto vs iteraciones
+    axs[0, 1].semilogy(range(len(resultados_biseccion[3])), resultados_biseccion[3], 'b.-', label='Bisección')
+    axs[0, 1].semilogy(range(len(resultados_newton[3])), resultados_newton[3], 'r.-', label='Newton-Raphson')
+    axs[0, 1].set_title('Error absoluto vs Iteraciones')
+    axs[0, 1].set_xlabel('Iteración')
+    axs[0, 1].set_ylabel('Error absoluto (escala log)')
+    axs[0, 1].legend()
+    axs[0, 1].grid(True)
+    
+    # 3. Gráfica de error relativo vs iteraciones
+    axs[1, 0].semilogy(range(len(resultados_biseccion[4])), resultados_biseccion[4], 'b.-', label='Bisección')
+    axs[1, 0].semilogy(range(len(resultados_newton[4])), resultados_newton[4], 'r.-', label='Newton-Raphson')
+    axs[1, 0].set_title('Error relativo vs Iteraciones')
+    axs[1, 0].set_xlabel('Iteración')
+    axs[1, 0].set_ylabel('Error relativo (escala log)')
+    axs[1, 0].legend()
+    axs[1, 0].grid(True)
+    
+    # 4. Gráfica de barras comparando tiempo y memoria
+    criterios = ['Tiempo (s)', 'Memoria (KB)']
+    biseccion_vals = [resultados_biseccion[5], resultados_biseccion[6]/1024]  # Convertir bytes a KB
+    newton_vals = [resultados_newton[5], resultados_newton[6]/1024]  # Convertir bytes a KB
+    
+    x = range(len(criterios))
+    width = 0.35
+    
+    axs[1, 1].bar([i - width/2 for i in x], biseccion_vals, width, label='Bisección', color='blue')
+    axs[1, 1].bar([i + width/2 for i in x], newton_vals, width, label='Newton-Raphson', color='red')
+    
+    axs[1, 1].set_title('Comparación de recursos')
+    axs[1, 1].set_xticks(x)
+    axs[1, 1].set_xticklabels(criterios)
+    axs[1, 1].legend()
+    
+    # Ajustar el diseño
+    plt.tight_layout()
+    plt.subplots_adjust(top=0.9)
+    
+    # Crear un nombre de archivo seguro basado en la ecuación
+    nombre_archivo = ecuacion_str.replace(' ', '_')
+    # Reemplazar caracteres no seguros para nombres de archivo
+    nombre_archivo = re.sub(r'[^\w\-_\.]', '', nombre_archivo)
+    # Limitar la longitud del nombre
+    if len(nombre_archivo) > 30:
+        nombre_archivo = nombre_archivo[:30]
+    # Añadir un sufijo si el nombre está vacío
+    if not nombre_archivo:
+        nombre_archivo = "ecuacion"
+    
+    nombre_archivo = f"comparacion_{nombre_archivo}.png"
+    
+    # Guardar la figura
+    plt.savefig(nombre_archivo)
+    
+    print(f"\nSe ha generado una gráfica comparativa y guardado como '{nombre_archivo}'")
+    
+    # Mostrar la figura (opcional, dependiendo del entorno)
+    try:
+        plt.show()
+    except Exception as e:
+        print(f"Nota: No se pudo mostrar la gráfica interactivamente. Error: {e}")
+        print(f"La gráfica ha sido guardada como '{nombre_archivo}'")
+    finally:
+        plt.close()
 
 
 def entrada_segura(mensaje: str, valor_predeterminado=None):
@@ -415,6 +539,7 @@ def resolver_con_argumentos(args):
                     print(f"Error absoluto final: {resultados_biseccion[3][-1]:.10e}")
                     print(f"Error relativo final: {resultados_biseccion[4][-1]:.10e}")
                     print(f"Tiempo de ejecucion: {resultados_biseccion[5]:.6f} segundos")
+                    print(f"Uso de memoria: {resultados_biseccion[6]} bytes")
                     
                     # Imprimir tabla de iteraciones
                     imprimir_tabla("Biseccion", resultados_biseccion[2], resultados_biseccion[3], 
@@ -439,6 +564,7 @@ def resolver_con_argumentos(args):
         print(f"Error absoluto final: {resultados_newton[3][-1]:.10e}")
         print(f"Error relativo final: {resultados_newton[4][-1]:.10e}")
         print(f"Tiempo de ejecucion: {resultados_newton[5]:.6f} segundos")
+        print(f"Uso de memoria: {resultados_newton[6]} bytes")
         
         # Imprimir tabla de iteraciones
         imprimir_tabla("Newton-Raphson", resultados_newton[2], resultados_newton[3], 
@@ -571,6 +697,7 @@ def modo_interactivo():
                         print(f"  • Error absoluto final: {resultados_biseccion[3][-1]:.10e}")
                         print(f"  • Error relativo final: {resultados_biseccion[4][-1]:.10e}")
                         print(f"  • Tiempo de ejecucion: {resultados_biseccion[5]:.6f} segundos")
+                        print(f"  • Uso de memoria: {resultados_biseccion[6]} bytes")
                         
                         # Preguntar si desea ver la tabla de iteraciones
                         mostrar_tabla = entrada_segura("\n ¿Deseas ver la tabla de iteraciones? (s/n): ")
@@ -603,6 +730,7 @@ def modo_interactivo():
                 print(f"  • Error absoluto final: {resultados_newton[3][-1]:.10e}")
                 print(f"  • Error relativo final: {resultados_newton[4][-1]:.10e}")
                 print(f"  • Tiempo de ejecucion: {resultados_newton[5]:.6f} segundos")
+                print(f"  • Uso de memoria: {resultados_newton[6]} bytes")
                 
                 # Preguntar si desea ver la tabla de iteraciones
                 mostrar_tabla = entrada_segura("\n ¿Deseas ver la tabla de iteraciones? (s/n): ")
